@@ -1,0 +1,129 @@
+% Layout and typography for the CV in main.tex.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cvstyle}[2026/10/06 CV layout]
+
+\RequirePackage[left=0.75in,right=0.75in,top=54.2pt,bottom=54pt]{geometry}
+\RequirePackage{fontawesome5}
+\RequirePackage{xurl}
+\RequirePackage{hyperref}
+\urlstyle{same}
+\hypersetup{
+  colorlinks=false,
+  breaklinks=true,
+  pdfborder={0 0 1},
+  urlbordercolor={0 1 1},
+  linkbordercolor={0 1 1}
+}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlength{\emergencystretch}{1em}
+
+% Type sizes and vertical rhythm.
+\newcommand{\cvbody}{\fontsize{9}{10.91}\selectfont}
+\AtBeginDocument{\cvbody}
+\newcommand{\cvsep}{\par\vspace{10.91pt}}
+\newcommand{\cvrolesep}{\vspace{3.9pt}}
+\newcommand{\cvhonorssep}{\vspace{10.91pt}}
+\newcommand{\cvsection}[1]{%
+  \cvsep
+  {\fontsize{10}{12}\selectfont\bfseries #1\par}%
+  \vspace{3pt}\hrule height 0.4pt\vspace{13.6pt}%
+}
+
+% Arguments: name, email, website, GitHub, LinkedIn. Empty fields are omitted.
+% Contact items take their natural widths and wrap when the row is full.
+% Use \cvurllink for a displayed URL that may need to break within the URL.
+\newcommand{\cvcontactgap}{\hspace{0.6em plus 0.3em}}
+\newcommand{\cvcontacticon}[1]{#1\nobreak\hspace{0.35em}\nobreak}
+\newif\ifcvcontactshown
+\newcommand{\cvcontactfield}[2]{%
+  \if\relax\detokenize{#2}\relax\else
+    \ifcvcontactshown\cvcontactgap\fi
+    \cvcontacticon{#1}#2%
+    \cvcontactshowntrue
+  \fi
+}
+\newcommand{\cvnamevalue}{}
+\newcommand{\cvheader}[5]{%
+  \gdef\cvnamevalue{#1}%
+  \hypersetup{pdfauthor={#1}}%
+  \begin{center}
+    {\fontsize{17.28}{20}\selectfont\bfseries #1\par}
+    \vspace{10.1pt}
+    \cvcontactshownfalse
+    \cvcontactfield{\faEnvelope}{#2}%
+    \cvcontactfield{\faHome}{#3}%
+    \cvcontactfield{\faGithub}{#4}%
+    \cvcontactfield{\faLinkedin}{#5}\par
+  \end{center}
+  \vspace{-10pt}%
+}
+
+% Reusable content blocks.
+\newcommand{\cvlink}[2]{\href{#1}{#2}}
+\newcommand{\cvurllink}[2]{\href{#1}{\nolinkurl{#2}}}
+\newcommand{\me}{\textbf{\cvnamevalue}}
+% A long left or right field gets its own line instead of colliding with
+% the other field. Short fields retain the original left/right alignment.
+\newsavebox{\cvleftfield}
+\newsavebox{\cvrightfield}
+\newcommand{\cvrow}[2]{%
+  \sbox{\cvleftfield}{#1}%
+  \sbox{\cvrightfield}{#2}%
+  \ifdim\dimexpr\wd\cvleftfield+\wd\cvrightfield+1em\relax>\linewidth
+    #1\par\nobreak\noindent\hfill #2\par
+  \else
+    #1\hfill #2\par
+  \fi
+}
+\newcommand{\cvhead}[2]{\cvrow{\textbf{#1}}{#2}}
+\newcommand{\cvheadplain}[2]{\cvrow{#1}{#2}}
+\newcommand{\cvline}[1]{#1\par}
+\newcommand{\cvpubcontent}[3]{%
+  \textbf{#1}\par
+  #2\par
+  #3\par
+}
+\newif\ifcvfirstpublication
+\newenvironment{cvpublications}{\cvfirstpublicationtrue}{}
+\newcommand{\cvpub}[3]{%
+  \ifcvfirstpublication\cvfirstpublicationfalse\else\cvsep\fi
+  \cvpubcontent{#1}{#2}{#3}%
+}
+\newcommand{\cvrole}[4]{%
+  \cvhead{#1}{#2}%
+  \cvheadplain{#3}{#4}%
+}
+\newsavebox{\cvbulletlabel}
+\newcommand{\cvbulletitem}[4]{%
+  \sbox{\cvbulletlabel}{$#2$}%
+  \noindent\hspace*{#1}\usebox{\cvbulletlabel}\hspace{#3}%
+  \parbox[t]{\dimexpr\linewidth-#1-\wd\cvbulletlabel-#3\relax}{#4}\par
+}
+% \cvmajor{left text}{right text}; use {} when no right text is needed.
+\newsavebox{\cvmajorright}
+\newcommand{\cvmajorcontent}[2]{%
+  \sbox{\cvmajorright}{#2}%
+  \ifdim\wd\cvmajorright>0.4\linewidth
+    \cvrow{\textbf{#1}}{#2}%
+  \else
+    \parbox[t]{\dimexpr\linewidth-\wd\cvmajorright-1em\relax}{%
+      \raggedright\textbf{#1}%
+    }\hfill\usebox{\cvmajorright}%
+  \fi
+}
+\newcommand{\cvmajor}[2]{%
+  \par\vspace{6.3pt}%
+  \cvbulletitem{1.53em}{\bullet}{0.49em}{%
+    \if\relax\detokenize{#2}\relax
+      \textbf{#1}%
+    \else
+      \cvmajorcontent{#1}{#2}%
+    \fi
+  }%
+  \vspace{2.5pt}%
+}
+\newcommand{\cvminor}[1]{%
+  \cvbulletitem{3.79em}{\circ}{0.51em}{#1}%
+}
