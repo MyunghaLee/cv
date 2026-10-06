@@ -1,0 +1,46 @@
+name: Build and release CV
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cv-release
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Build PDF
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          texlive_version: '2026'
+
+      - name: Publish latest PDF
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mv main.pdf Myungha_Lee_CV.pdf
+
+          # An older run must not replace the latest release after a newer push.
+          current_sha="$(git ls-remote origin refs/heads/master | cut -f1)"
+          if [[ "$current_sha" != "$GITHUB_SHA" ]]; then
+            echo "Skipping release: master has advanced to $current_sha"
+            exit 0
+          fi
+
+          tag="cv-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          gh release create "$tag" Myungha_Lee_CV.pdf \
+            --target "$GITHUB_SHA" \
+            --title "CV build ${GITHUB_RUN_NUMBER}" \
+            --notes "Built from commit ${GITHUB_SHA}." \
+            --latest
